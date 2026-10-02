@@ -4938,8 +4938,8 @@ File names include document type and team identifier.
 - PRE-2. The instructor is assigned to the course section (BR-section-scoped-access).
 
 **Postconditions:**
-- POST-1. Reminder emails are sent to the selected nudge-eligible students whose email delivery succeeds.
-- POST-2. The instructor is informed of any selected students whose reminder email could not be delivered.
+- POST-1. The configured Gmail SMTP service accepts a reminder send request for each selected student who remains nudge eligible at sending time, except for send attempts that fail.
+- POST-2. The instructor is informed of any selected students whose reminder send attempt failed or was skipped because the student was no longer nudge eligible.
 
 **Main Success Scenario:**
 1. The instructor indicates to view students with missing submissions for a course section.
@@ -4977,11 +4977,17 @@ File names include document type and team identifier.
   - 6a1. The system sends another reminder according to BR-repeat-manual-nudges.
   - 6a2. The system continues sending reminders to the remaining selected students.
 
-- **6b. The mail server rejects an email address or a reminder otherwise cannot be delivered:**
-  - 6b1. The system records that the reminder to that student failed.
-  - 6b2. The system continues sending reminders to the remaining selected students.
-  - 6b3. After all reminder attempts are complete, the system informs the instructor which selected students did not receive a reminder.
-  - 6b4. Use case ends.
+- **6b. A selected student is no longer nudge eligible when the system is ready to send the reminder:**
+  - 6b1. The system does not send a reminder to that student.
+  - 6b2. The system records that the reminder was skipped because the student was no longer nudge eligible.
+  - 6b3. The system continues processing the remaining selected students.
+  - 6b4. After all reminder attempts are complete, the system informs the instructor which selected students were skipped.
+
+- **6c. The mail server rejects an email address or a reminder otherwise cannot be delivered:**
+  - 6c1. The system records that the reminder to that student failed.
+  - 6c2. The system continues sending reminders to the remaining selected students.
+  - 6c3. After all reminder attempts are complete, the system informs the instructor which selected students had failed reminder attempts.
+  - 6c4. Use case ends.
 
 **Priority:** High
 
@@ -4997,6 +5003,8 @@ File names include document type and team identifier.
 - A failed delivery to one student does not prevent reminders from being sent to the other selected students.
 - The list of students and their submission status is available only to an instructor assigned to that course section (BR-section-scoped-access) and is treated as student educational-record information under CO-ferpa.
 - The automatic weekly reminder described by FR-NOT-weekly-reminder is related behavior but is outside the scope of this instructor-triggered use case.
+- A successful reminder send means the configured Gmail SMTP service accepted the send request without reporting an error. Later delivery failures or bounced messages are outside the scope of this use case.
+- If a selected student's eligibility changes after the list is displayed but before the reminder is sent, the system uses the student's current eligibility at sending time rather than the earlier displayed state.
 
 **Related Use Cases:** UC-WAR-manage-activities: Manage activities in a weekly activity report; UC-EVA-submit-evaluation: Submit a peer evaluation for the previous week.
 
