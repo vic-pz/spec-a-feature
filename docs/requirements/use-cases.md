@@ -4919,3 +4919,94 @@ File names include document type and team identifier.
 **Related Use Cases:** UC-AI-critique: Request a critique from the critique assistant; UC-AI-consult-project-assistant: Consult the project assistant; UC-CFG-configure-review-criteria: Configure the cross-document review criteria for a course section; UC-VAL-run-validation: Run validation (ReqLint) on the current document; UC-AI-review-proposal: Review and accept or reject an assistant proposal; UC-DOC-edit-document: Edit a section-based requirement document; UC-DOC-edit-use-case: Edit a use case.
 **Assumptions:**
 **Open Issues:**
+
+## **Notifications**
+
+### **UC-NOT-nudge-missing-students: The instructor nudges students with missing submissions**
+
+**UC ID and Name:** UC-NOT-nudge-missing-students: Nudge students with missing submissions  
+**Created By:** Victor Perez  
+**Date Created:** 2026-10-02  
+**Primary Actor:** instructor  
+**Secondary Actors:** students  
+**Trigger:** The instructor indicates to view students with missing submissions and send them a reminder.
+
+**Description:** The instructor wants to identify students in their course section who currently have a required weekly activity report or peer evaluation that they are still able to submit but have not submitted, so that they can send those students a reminder.
+
+**Preconditions:**
+- PRE-1. The instructor is logged into the system.
+- PRE-2. The instructor is assigned to the course section (BR-section-scoped-access).
+
+**Postconditions:**
+- POST-1. The configured Gmail SMTP service accepts a reminder send request for each selected student who remains nudge eligible at sending time, except for send attempts that fail.
+- POST-2. The instructor is informed of any selected students whose reminder send attempt failed or was skipped because the student was no longer nudge eligible.
+
+**Main Success Scenario:**
+1. The instructor indicates to view students with missing submissions for a course section.
+2. The system determines which students are nudge eligible for each weekly activity report or peer evaluation currently due according to BR-submission-nudge-eligibility.
+3. The system displays the nudge-eligible students and identifies the item or items each student is missing.
+4. The instructor selects one or more nudge-eligible students to remind.
+5. The instructor confirms that she wants to send the reminders.
+6. The system sends each selected student a reminder email identifying only the item or items that student is currently missing.
+7. The system informs the instructor that the reminder attempt is complete.
+8. Use case ends.
+
+**Extensions:**
+- **2a. A student is not assigned to a team:**
+  - 2a1. The system excludes the student from the nudge-eligible list because the student cannot currently submit a weekly activity report or peer evaluation (BR-team-assignment-required).
+  - 2a2. The system continues checking the remaining students.
+
+- **2b. A peer evaluation submission window has closed:**
+  - 2b1. The system does not list the student as nudge eligible for that peer evaluation because the student can no longer submit it (BR-evaluation-submission-window).
+  - 2b2. The system continues checking the student for any other currently due item.
+
+- **2c. The week to be evaluated is not one of the course section's active weeks:**
+  - 2c1. The system does not treat a peer evaluation as due for that week (BR-active-weeks).
+  - 2c2. The system continues checking the student for any other currently due item.
+
+- **2d. A student previously had a submission, but the information required for that submission no longer exists:**
+  - 2d1. If the item is still open for submission, the system treats the item as missing and the student becomes nudge eligible for it again (BR-submission-nudge-eligibility).
+  - 2d2. If the applicable submission opportunity has closed, the student is not nudge eligible for that item.
+  - 2d3. The system continues checking the student for any other currently due item.
+
+- **3a. No students are currently nudge eligible:**
+  - 3a1. The system informs the instructor that there are no students with currently actionable missing submissions.
+  - 3a2. Use case ends.
+
+- **6a. The instructor has already nudged a selected student for the same item:**
+  - 6a1. The system sends another reminder according to BR-repeat-manual-nudges.
+  - 6a2. The system continues sending reminders to the remaining selected students.
+
+- **6b. A selected student is no longer nudge eligible when the system is ready to send the reminder:**
+  - 6b1. The system does not send a reminder to that student.
+  - 6b2. The system records that the reminder was skipped because the student was no longer nudge eligible.
+  - 6b3. The system continues processing the remaining selected students.
+  - 6b4. After all reminder attempts are complete, the system informs the instructor which selected students were skipped.
+
+- **6c. The mail server rejects an email address or a reminder otherwise cannot be delivered:**
+  - 6c1. The system records that the reminder to that student failed.
+  - 6c2. The system continues sending reminders to the remaining selected students.
+  - 6c3. After all reminder attempts are complete, the system informs the instructor which selected students had failed reminder attempts.
+  - 6c4. Use case ends.
+
+**Priority:** High
+
+**Frequency of Use:** Approximately 2 instructors, as needed during weekly submission periods.
+
+**Business Rules:** BR-section-scoped-access, BR-team-assignment-required, BR-active-weeks, BR-evaluation-submission-window, BR-submission-nudge-eligibility, BR-repeat-manual-nudges
+
+**Associated Information:**
+- Nudge eligibility is determined separately for each due item. A student may have submitted a weekly activity report while still missing a peer evaluation, or vice versa.
+- For a weekly activity report, a submission exists for a week when the student has at least one saved activity for that week.
+- For a peer evaluation, the student is considered to have submitted when the evaluations required by UC-EVA-submit-evaluation for that week are present.
+- A reminder identifies only the item or items currently missing for that student.
+- A failed delivery to one student does not prevent reminders from being sent to the other selected students.
+- The list of students and their submission status is available only to an instructor assigned to that course section (BR-section-scoped-access) and is treated as student educational-record information under CO-ferpa.
+- The automatic weekly reminder described by FR-NOT-weekly-reminder is related behavior but is outside the scope of this instructor-triggered use case.
+- A successful reminder send means the configured Gmail SMTP service accepted the send request without reporting an error. Later delivery failures or bounced messages are outside the scope of this use case.
+- If a selected student's eligibility changes after the list is displayed but before the reminder is sent, the system uses the student's current eligibility at sending time rather than the earlier displayed state.
+
+**Related Use Cases:** UC-WAR-manage-activities: Manage activities in a weekly activity report; UC-EVA-submit-evaluation: Submit a peer evaluation for the previous week.
+
+**Assumptions:**
+**Open Issues:**
